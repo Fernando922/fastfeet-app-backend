@@ -23,6 +23,68 @@ class RecipientController {
       id,
     });
   }
+
+  async index(req, res) {
+    const content = await Recipient.findAll({});
+    return res.json(content);
+  }
+
+  async delete(req, res) {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: 'id not provided' });
+    }
+
+    const user = await Recipient.findOne({ where: { id } });
+
+    if (!user) {
+      return res.status(400).json({ error: 'User not found!' });
+    }
+
+    await Recipient.destroy({ where: { id } });
+    return res.status(204).send();
+  }
+
+  async show(req, res) {
+    const { id } = req.params;
+
+    const user = await Recipient.findOne({ where: { id } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found!' });
+    }
+
+    return res.json(user);
+  }
+
+  async update(req, res) {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).send({ error: 'id not provided' });
+    }
+
+    const schema = Yup.object().shape({
+      name: Yup.string(),
+      street: Yup.string(),
+      number: Yup.string(),
+      zip_code: Yup.string().max(8),
+      complement: Yup.string(),
+      city: Yup.string(),
+      state: Yup.string().max(2),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'validation fails' });
+    }
+
+    await Recipient.update(req.body, {
+      where: { id },
+    });
+
+    return res.status(204).send();
+  }
 }
 
 export default new RecipientController();
